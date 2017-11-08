@@ -2,8 +2,8 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <Name>GrafanaPluginTemplate</Name>
-    <RootNamespace>GrafanaPluginTemplate</RootNamespace>
+    <Name>contourMap-grafana</Name>
+    <RootNamespace>contourMap-grafana</RootNamespace>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -35,10 +35,13 @@
   <ItemGroup>
     <Content Include="package.json" />
     <Content Include="README.md" />
-    <Content Include="src\module.html">
+    <Content Include="src\partials\module.html">
       <SubType>Code</SubType>
     </Content>
     <Content Include="src\plugin.json">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="src\tsconfig.json">
       <SubType>Code</SubType>
     </Content>
   </ItemGroup>
@@ -49,11 +52,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
+    <Folder Include="src\controllers\" />
+    <Folder Include="src\partials\" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="src\grafanaPluginTemplate_ctrl.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\controllers\contourMap_ctrl.ts" />
     <TypeScriptCompile Include="src\module.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

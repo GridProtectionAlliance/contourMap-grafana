@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  module.ts - Gbtc
+//  contourMap_ctrl.ts - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,8 +21,15 @@
 //
 //******************************************************************************************************
 
-import { ContourMapCtrl } from './controllers/contourMap_ctrl';
+import { MetricsPanelCtrl } from 'app/plugins/sdk';
 
-export {
-    ContourMapCtrl as PanelCtrl
-};
+export class ContourMapCtrl extends MetricsPanelCtrl{
+    constructor($scope, $injector, $rootScope) {
+        super($scope, $injector);
+
+
+
+    }
+}
+
+ContourMapCtrl.template = "<div id='contourmap_{{ ctrl.panel.id } }'></div>";
