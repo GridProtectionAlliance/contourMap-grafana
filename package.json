@@ -8,13 +8,10 @@
   "author": "Grid Protection Alliance",
   "license": "MIT",
   "dependencies": {
-    "lodash": "^4.17.2",
-    "moment": "^2.12.0",
     "d3": "4.11.0",
     "d3-contour": "1.1.1",
     "d3-hsv": "0.1.0",
-    "leaflet": "1.2.0",
-    "grafana/grafana-sdk-mocks": "1.0.0"
+    "leaflet": "1.2.0"
   },
   "devDependencies": {
     "babel": "^6.5.1",
@@ -39,5 +36,4 @@
     "grunt-typescript": "^0.8.0",
     "typescript": "^2.6.1"
   }
-
 }

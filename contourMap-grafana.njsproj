@@ -47,17 +47,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="package.json" />
-    <Content Include="plugin.json" />
     <Content Include="README.md" />
     <Content Include="src\css\leaflet.css" />
     <Content Include="src\partials\editor.html" />
     <Content Include="src\partials\module.html" />
     <Content Include="src\plugin.json" />
-    <Content Include="src\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\controllers\contourMap_ctrl.js" />
     <Compile Include="src\js\constants.js" />
+    <Compile Include="src\lib\d3-array.js" />
+    <Compile Include="src\lib\d3-contour.js" />
+    <Compile Include="src\lib\leaflet.js" />
     <Compile Include="src\module.js" />
     <Compile Include="Gruntfile.js">
       <SubType>Code</SubType>
@@ -68,6 +69,7 @@
     <Folder Include="src\controllers\" />
     <Folder Include="src\css\" />
     <Folder Include="src\js\" />
+    <Folder Include="src\lib\" />
     <Folder Include="src\partials\" />
   </ItemGroup>
   <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->

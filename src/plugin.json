@@ -1,15 +1,14 @@
-﻿{
+{
   "type": "panel",
-  "name": "Grafana Plugin Template",
+  "name": "Contour Map Panel",
   "id": "gridprotectionalliance-contourmap-panel",
-
   "info": {
-    "description": "Plugin Template for grafana",
+    "description": "Panel for displaying phasors on a map",
     "author": {
       "name": "Grid Protection Alliance",
       "url": "http://www.gridprotectionalliance.org"
     },
-    "keywords": [ "template", "panel" ],
+    "keywords": [ "contours", "panel" ],
     "logos": {
       "small": "",
       "large": ""
@@ -17,7 +16,7 @@
     "links": [
       {
         "name": "Project site",
-        "url": "https://github.com/GridProtectionAlliance/contourMap-grafana"
+        "url": "https://github.com/GridProtectionAlliance/phasorMap-grafana"
       }
     ],
     "screenshots": [
@@ -25,9 +24,9 @@
     "version": "1.0.0",
     "updated": "2017-10-23"
   },
-
   "dependencies": {
     "grafanaVersion": "4.6",
+    "openHistorianPhasorDatasource": "1.0.1",
     "plugins": []
   }
 }
