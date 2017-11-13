@@ -24,16 +24,13 @@
 import { MetricsPanelCtrl } from 'app/plugins/sdk'
 
 import _ from 'lodash';
-import * as d3 from "d3";
+import d3 from "d3";
 
-import * as L from './../lib/leaflet';
+import * as L from 'leaflet';
 import './../css/leaflet.css!';
-import { TileServers } from './../js/constants';
-//import * as d3Contour from "d3-contour";
 
-//import * as d3Scale from "d3-scale";
-//import * as d3Color from "d3-color";
-//import * as d3Collection from "d3-collection";
+import { TileServers } from './../js/constants';
+import isobands from "@turf/isobands"
 
 export class ContourMapCtrl extends MetricsPanelCtrl {
     constructor($scope, $injector) {
@@ -52,9 +49,8 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
 
 
         // Variables for options
-        ctrl.panel.mapBackgrounds = Object.keys(TileServers);
-        ctrl.panel.mapBackground = (ctrl.panel.mapBackground != undefined ? ctrl.panel.mapBackground : ctrl.panel.mapBackgrounds[0]);
-        ctrl.panel.tileServer = _.find(TileServers, function (ts) { return ts.Name == ctrl.panel.mapBackground;});
+        ctrl.TileServers = TileServers;
+        ctrl.panel.tileServer = (ctrl.panel.tileServer != undefined ? ctrl.panel.tileServer: TileServers[0]);
         ctrl.panel.maxZoom = (ctrl.panel.tileServer.Options.options.maxZoom != undefined ? ctrl.panel.tileServer.Options.options.maxZoom : 18)
         ctrl.panel.minZoom = (ctrl.panel.tileServer.Options.options.minZoom != undefined ? ctrl.panel.tileServer.Options.options.minZoom : 2)
         ctrl.panel.zoomLevel = (ctrl.panel.zoomLevel != undefined ? ctrl.panel.zoomLevel : ctrl.panel.tileServer.Options.options.maxZoom);
@@ -68,13 +64,21 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         ctrl.panel.useAngleMean = (ctrl.panel.useAngleMean != undefined ? ctrl.panel.useAngleMean : false);
         ctrl.panel.angleMeanTimeWindow = (ctrl.panel.angleMeanTimeWindow != undefined ? ctrl.panel.angleMeanTimeWindow : '5');
         ctrl.panel.showLegend = (ctrl.panel.showLegend != undefined ? ctrl.panel.showLegend : false);
+        ctrl.panel.useGradient = (ctrl.panel.useGradient != undefined ? ctrl.panel.useGradient : true);
+        ctrl.panel.gradientBreakCount = (ctrl.panel.gradientBreakCount != undefined ? ctrl.panel.gradientBreakCount : 10);
+        ctrl.panel.gradientStart = (ctrl.panel.gradientStart != undefined ? ctrl.panel.gradientStart : 0);
+        ctrl.panel.gradientEnd = (ctrl.panel.gradientEnd != undefined ? ctrl.panel.gradientEnd : 1000);
+        ctrl.panel.gradientStartColor = (ctrl.panel.gradientStartColor != undefined ? ctrl.panel.gradientStartColor : 'purple');
+        ctrl.panel.gradientEndColor = (ctrl.panel.gradientEndColor != undefined ? ctrl.panel.gradientEndColor : 'red');
+        ctrl.panel.gradientSigFigs = (ctrl.panel.gradientSigFigs != undefined ? ctrl.panel.gradientSigFigs : 2);
 
-        setTimeout(function () {
-            ctrl.createMap();
-        }, 300);
 
         ctrl.metaData = null;
         ctrl.data = [];
+        ctrl.circleMarkers = [];
+        ctrl.contourLayers = null;
+        ctrl.$scope.mapContainer == null;
+        ctrl.legend = null;
 
 
     }
@@ -82,6 +86,7 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     // #region Events from Graphana Handlers
     onInitEditMode() {
         this.addEditorTab('Options', 'public/plugins/gridprotectionalliance-contourmap-panel/partials/editor.html', 2);
+        this.addEditorTab('Colors', 'public/plugins/gridprotectionalliance-contourmap-panel/partials/colors.html', 3);
         console.log('init-edit-mode');
     }
 
@@ -98,9 +103,9 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     }
 
     onRefresh() {
-        //var ctrl = this;
+        var ctrl = this;
 
-        //if (ctrl.height > ctrl.row.height) ctrl.render();
+        if (ctrl.height > ctrl.row.height) ctrl.render();
 
         console.log('refresh');
     }
@@ -117,7 +122,11 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     onDataRecieved(data) {
         var ctrl = this;
 
-        if (ctrl.metaData == null) {
+        if (ctrl.$scope.mapContainer == null) ctrl.createMap();
+
+        if (ctrl.metaData == null || ctrl.panel.editMode) {
+            ctrl.metaData = [];
+            
             ctrl.datasource.getMetaData(data.map(function(x) { return "'" + x.pointtag + "'"; }).join(',')).then(function (metaData) {
                 ctrl.metaData = JSON.parse(metaData.data);
                 _.each(ctrl.metaData, function (element, index, list) {
@@ -126,10 +135,10 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
                     });
 
                     if (datam.datapoints.length > 0)
-                        element.Value = datam.datapoints[datam.datapoints.length - 1][0];
+                        element.Value = datam.datapoints.pop()[0];
                 });
                 ctrl.plotSites();
-                ctrl.plotContour();
+                ctrl.plotContour(data);
 
             })
         }
@@ -140,9 +149,9 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
                 });
 
                 if (datam.datapoints.length > 0)
-                    element.Value = datam.datapoints[datam.datapoints.length - 1][0];
+                    element.Value = datam.datapoints.pop()[0];
             });
-            ctrl.plotContour();
+            ctrl.plotContour(data);
         }
 
     }
@@ -206,10 +215,10 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     plotSites() {
         var ctrl = this;
         var options = {
-            radius: 10,             // Radius of the circle marker, in pixels
+            radius: 4,             // Radius of the circle marker, in pixels
             stroke: true,           // Whether to draw stroke along the path. Set it to false to disable borders on polygons or circles.
             color: '#3388ff',       // Stroke color
-            weight: 3,              // Stroke width in pixels
+            weight: 1,              // Stroke width in pixels
             opacity: 1.0,           // Stroke opacity
             lineCap: 'round',       // A string that defines shape to be used at the end of the stroke.
             lineJoin: 'round',      // A string that defines shape to be used at the corners of the stroke.
@@ -223,33 +232,61 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
             renderer: null,         // Use this specific instance of Renderer for this path. Takes precedence over the map's default renderer.
             className: null         // 	Custom class name set on an element. Only for SVG renderer.
         };
+
+        if (ctrl.circleMarkers.length > 0) ctrl.circleMarkers.map(a => { a.removeFrom(ctrl.$scope.mapContainer)})
         _.each(ctrl.metaData, function (element, index, list) {
-            L.circleMarker([element.Latitude, element.Longitude], options).addTo(ctrl.$scope.mapContainer)
+            ctrl.circleMarkers.push(L.circleMarker([element.Latitude, element.Longitude], options).addTo(ctrl.$scope.mapContainer));
         });
     }
 
-    plotContour() {
-        //var values = new Array(parseInt((n * m).toFixed(0))),
-        //    m = $(this.$scope.mapContainer._container).height(),
-        //    n = $(this.$scope.mapContainer._container).width();
+    plotContour(data) {
+        var ctrl = this;
 
-        //values.fill(2);
+        var m = $(this.$scope.mapContainer._container).height(),
+            n = $(this.$scope.mapContainer._container).width(),
+            values = new Array(parseInt((n * m).toFixed(0)));
 
-        //var color = d3.scaleSequential(d3.interpolateMagma)
-        //    .domain(d3.extent(values));
+        var geoJson = this.createGeoJson(data);
+        var isoband = isobands(geoJson, geoJson.properties.breaks, geoJson.properties);
 
-        //var contours = d3Contour.contours()
-        //    .size([n, m])
-        //    .smooth(false)
-        //    .thresholds(20);
+        if (ctrl.contourLayers != null) ctrl.contourLayers.removeFrom(ctrl.$scope.mapContainer);
 
-        //d3.select("svg")
-        //    .attr("viewBox", [0, 0, n, m])
-        //    .selectAll("path")
-        //    .data(contours(values))
-        //    .enter().append("path")
-        //    .attr("d", d3.geoPath())
-        //    .attr("fill", function (d) { return color(d.value); });
+        ctrl.contourLayers = L.geoJSON(isoband, {
+            style: function (feature) {
+                return feature.properties.style
+            }
+        }).addTo(ctrl.$scope.mapContainer);
+
+        ctrl.addLegend(isoband);
+
+    }
+
+    addLegend(data) {
+        var ctrl = this;
+
+        if (ctrl.legend != null) ctrl.legend.remove();
+
+        if (ctrl.panel.showLegend) {
+            ctrl.legend = L.control({ position: 'bottomright' });
+
+            ctrl.legend.onAdd = function (map) {
+
+                var div = L.DomUtil.create('div', 'info legend'),
+                    labels = data.features.map(a => { return a.properties.Value }),
+                    colors = data.features.map(a => { return a.properties.style.fillColor });
+
+                // loop through our density intervals and generate a label with a colored square for each interval
+                for (var i = 1; i < labels.length; i++) {
+                    div.innerHTML +=
+                        '<i style="background:' + colors[i] + '"></i> ' +
+                        labels[i] + '<br>';
+                }
+
+                return div;
+            };
+
+            ctrl.legend.addTo(ctrl.$scope.mapContainer);
+        }
     }
     // #endregion
 
@@ -291,7 +328,7 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     boundToMarkers() {
         var ctrl = this;
 
-        var markerGroup = new L.featureGroup(ctrl.$scope.circleMarkers);
+        var markerGroup = new L.featureGroup(ctrl.circleMarkers);
         if (markerGroup.getBounds().isValid())
             ctrl.$scope.mapContainer.fitBounds(markerGroup.getBounds());
 
@@ -313,6 +350,113 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         return input;
     }
     // #endregion
+
+    //#region Misc
+    createGeoJson(data) {
+        var ctrl = this;
+        ctrl.average = this.metaData.map(a => { return a.Value }).reduce((a, b) => { return a + b }) / this.metaData.length;
+        var markerGroup = new L.featureGroup(ctrl.circleMarkers);
+        var bounds = markerGroup.getBounds();
+        var minLng = bounds._southWest.lng;
+        var minLat = bounds._southWest.lat;
+        var maxLng = bounds._northEast.lng;
+        var maxLat = bounds._northEast.lat;
+
+        var gridN = 20;
+        var gridM = 20;
+
+        var nStep = Math.abs(maxLng - minLng) / gridN;
+        var mStep = Math.abs(maxLat - minLat) / gridM;
+
+        var breaks = [-9999999999];
+        var color = d3.scaleLinear()
+            .domain([ctrl.panel.gradientStart, ctrl.panel.gradientEnd])
+            .range([ctrl.panel.gradientStartColor, ctrl.panel.gradientEndColor])
+            .interpolate(d3.interpolateCubehelixLong);
+
+        var styles = [{
+            "style": {
+                "stroke": 0,
+                "fillColor": "white",
+                "opacity": 0
+            }
+        }];
+
+        for (var i = ctrl.panel.gradientStart; i <= ctrl.panel.gradientEnd; i+= (ctrl.panel.gradientEnd - ctrl.panel.gradientStart)/ctrl.panel.gradientBreakCount) {
+            breaks.push(i.toFixed(ctrl.panel.gradientSigFigs));
+            styles.push({
+                "style": {
+                    "stroke": 0,
+                    "fillColor": color(i)
+                }
+            })
+
+        }
+
+
+
+        var geoJson = {
+            "type": 'FeatureCollection',
+            "properties": {
+                "breaks": breaks,
+                "breaksProperties": styles,
+                "zProperty": "Value"
+            },
+            "features": []
+        }
+
+        for (var i = minLng - nStep; i <= maxLng + nStep; i += nStep) {
+            for (var j = minLat - mStep; j <= maxLat + mStep; j += mStep) {
+
+                var wzSum = 0;
+                var wSum = 0;
+                _.each(ctrl.metaData, (element, index, list) => {
+                    wzSum += Math.abs( element.Value) / Math.pow(ctrl.getDistanceFromLatLonInKm(element.Latitude, element.Longitude, j, i),2);
+                    wSum += 1 / Math.pow(ctrl.getDistanceFromLatLonInKm(element.Latitude, element.Longitude, j, i), 2);
+                });
+
+                var value = wzSum/wSum;
+
+
+                if( i < minLng || i > maxLng || j < minLat || j > maxLat) value = -9999999999
+                var feature = {
+                    "type": "Feature",
+                    "properties": { Value: value},
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [i, j]
+                    }
+                };
+
+                geoJson.features.push(feature)
+            }
+        }
+
+        return geoJson;
+    }
+
+    getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+        var ctrl = this;
+
+        var R = 6371; // Radius of the earth in km
+        var dLat = ctrl.deg2rad(lat2 - lat1);  // deg2rad below
+        var dLon = ctrl.deg2rad(lon2 - lon1);
+        var a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(ctrl.deg2rad(lat1)) * Math.cos(ctrl.deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2)
+            ;
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c; // Distance in km
+        return (d < 1 ? 1 : d);
+    }
+
+    deg2rad(deg) {
+        return deg * (Math.PI / 180)
+    }
+
+
+    //#endregion
 
 }
 

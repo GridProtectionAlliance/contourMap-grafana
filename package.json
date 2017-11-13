@@ -35,5 +35,8 @@
     "load-grunt-tasks": "^3.5.2",
     "grunt-typescript": "^0.8.0",
     "typescript": "^2.6.1"
+  },
+  "map": {
+    "@turf/isobands": "node_modules/@turf/isobands"
   }
 }

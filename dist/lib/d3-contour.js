@@ -1,7 +1,7 @@
 ﻿// https://d3js.org/d3-contour/ Version 1.1.1. Copyright 2017 Mike Bostock.
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3-array')) :
-        typeof define === 'function' && define.amd ? define(['exports', 'd3-array'], factory) :
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('./../lib/d3-array')) :
+        typeof define === 'function' && define.amd ? define(['exports', './../lib/d3-array'], factory) :
             (factory((global.d3 = global.d3 || {}), global.d3));
 }(this, (function (exports, d3Array) {
     'use strict';

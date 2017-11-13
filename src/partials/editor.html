@@ -9,7 +9,7 @@
         <div class="gf-form">
             <label class="gf-form-label width-10">Map Theme</label>
             <div class="gf-form-select-wrapper max-width-14">
-                <select class="input-small gf-form-input" ng-model="ctrl.panel.mapBackground" ng-options="t for t in ctrl.panel.mapBackgrounds" ng-change="ctrl.changeMapBackground()"></select>
+                <select class="input-small gf-form-input" ng-model="ctrl.panel.tileServer" ng-options="t.Name for t in ctrl.TileServers" ng-change="ctrl.changeMapBackground()"></select>
             </div>
         </div>
         <div class="gf-form">

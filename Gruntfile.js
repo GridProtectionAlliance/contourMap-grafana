@@ -35,7 +35,7 @@ module.exports = (grunt) => {
       src_to_dist: {
         cwd: 'src',
         expand: true,
-        src: ['**/*', '!**/*.js', '!**/*.scss', '!img/**/*'],
+        src: ['**/*', '!**/*.js', '!turf/**', '!lib/**'],
         dest: 'dist'
       },
       pluginDef: {
@@ -46,13 +46,7 @@ module.exports = (grunt) => {
       externals: {
         cwd: 'src',
         expand: true,
-        src: ['lib/*'],
-        dest: 'dist'
-      },
-      img_to_dist: {
-        cwd: 'src',
-        expand: true,
-        src: ['img/**/*'],
+        src: ['lib/**', 'turf/**'],
         dest: 'dist'
       }
     },
@@ -75,7 +69,7 @@ module.exports = (grunt) => {
         files: [{
           cwd: 'src',
           expand: true,
-          src: [ '*.js', '**/*.js', '!lib/*'],
+          src: [ '*.js', '**/*.js', '!lib/**', '!turf/**'],
           dest: 'dist',
           ext: '.js'
         }]
@@ -84,5 +78,5 @@ module.exports = (grunt) => {
 
   });
 
-  grunt.registerTask('default', ['clean', 'copy:src_to_dist', 'copy:pluginDef', 'copy:img_to_dist', 'copy:externals', 'babel']);
+  grunt.registerTask('default', ['clean', 'copy:src_to_dist', 'copy:pluginDef','copy:externals', 'babel']);
 };

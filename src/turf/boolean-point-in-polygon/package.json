@@ -1,0 +1,124 @@
+{
+  "@std/esm": {
+    "esm": "js",
+    "cjs": true
+  },
+  "_args": [
+    [
+      {
+        "raw": "./..//boolean-point-in-polygon@^5.0.4",
+        "scope": "./../",
+        "escapedName": "./../%2fboolean-point-in-polygon",
+        "name": "./..//boolean-point-in-polygon",
+        "rawSpec": "^5.0.4",
+        "spec": ">=5.0.4 <6.0.0",
+        "type": "range"
+      },
+      "C:\\grafana-4.5.1\\data\\plugins\\contourMap-grafana\\node_modules\\./../\\isobands"
+    ]
+  ],
+  "_from": "./..//boolean-point-in-polygon@>=5.0.4 <6.0.0",
+  "_id": "./..//boolean-point-in-polygon@5.0.4",
+  "_inCache": true,
+  "_location": "/./..//boolean-point-in-polygon",
+  "_nodeVersion": "6.11.2",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/boolean-point-in-polygon-5.0.4.tgz_1510249701173_0.4308940398041159"
+  },
+  "_npmUser": {
+    "name": "deniscarriere",
+    "email": "carriere.denis@gmail.com"
+  },
+  "_npmVersion": "3.10.10",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "./..//boolean-point-in-polygon@^5.0.4",
+    "scope": "./../",
+    "escapedName": "./../%2fboolean-point-in-polygon",
+    "name": "./..//boolean-point-in-polygon",
+    "rawSpec": "^5.0.4",
+    "spec": ">=5.0.4 <6.0.0",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/./..//isobands"
+  ],
+  "_resolved": "https://registry.npmjs.org/./..//boolean-point-in-polygon/-/boolean-point-in-polygon-5.0.4.tgz",
+  "_shasum": "70702d8a67368512d1de8c69cb71f8c7ee3747ba",
+  "_shrinkwrap": null,
+  "_spec": "./..//boolean-point-in-polygon@^5.0.4",
+  "_where": "C:\\grafana-4.5.1\\data\\plugins\\contourMap-grafana\\node_modules\\./../\\isobands",
+  "author": {
+    "name": "Turf Authors"
+  },
+  "bugs": {
+    "url": "https://github.com/Turfjs/turf/issues"
+  },
+  "dependencies": {
+    "./..//invariant": "^5.0.4"
+  },
+  "description": "turf boolean-point-in-polygon module",
+  "devDependencies": {
+    "@std/esm": "*",
+    "./..//helpers": "^5.0.4",
+    "benchmark": "*",
+    "rollup": "*",
+    "tape": "*"
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "70702d8a67368512d1de8c69cb71f8c7ee3747ba",
+    "tarball": "https://registry.npmjs.org/./..//boolean-point-in-polygon/-/boolean-point-in-polygon-5.0.4.tgz"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "main.js"
+  ],
+  "homepage": "https://github.com/Turfjs/turf",
+  "jsnext:main": "index",
+  "keywords": [
+    "geojson",
+    "polygon",
+    "point",
+    "inside",
+    "bin",
+    "gis"
+  ],
+  "license": "MIT",
+  "main": "main",
+  "maintainers": [
+    {
+      "name": "deniscarriere",
+      "email": "carriere.denis@gmail.com"
+    },
+    {
+      "name": "tcql",
+      "email": "tim.channell@gmail.com"
+    },
+    {
+      "name": "morganherlocker",
+      "email": "morgan.herlocker@gmail.com"
+    },
+    {
+      "name": "tmcw",
+      "email": "tom@macwright.org"
+    }
+  ],
+  "module": "index",
+  "name": "./..//boolean-point-in-polygon",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Turfjs/turf.git"
+  },
+  "scripts": {
+    "bench": "node -r @std/esm bench.js",
+    "pretest": "rollup -c ../../rollup.config.js",
+    "test": "node -r @std/esm test.js"
+  },
+  "types": "index.d.ts",
+  "version": "5.0.4"
+}

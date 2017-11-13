@@ -1,0 +1,142 @@
+{
+  "@std/esm": {
+    "esm": "js",
+    "cjs": true
+  },
+  "_args": [
+    [
+      {
+        "raw": "./..//helpers@^5.0.4",
+        "scope": "./../",
+        "escapedName": "./../%2fhelpers",
+        "name": "./..//helpers",
+        "rawSpec": "^5.0.4",
+        "spec": ">=5.0.4 <6.0.0",
+        "type": "range"
+      },
+      "C:\\grafana-4.5.1\\data\\plugins\\contourMap-grafana\\node_modules\\./../\\isobands"
+    ]
+  ],
+  "_from": "./..//helpers@>=5.0.4 <6.0.0",
+  "_id": "./..//helpers@5.0.4",
+  "_inCache": true,
+  "_location": "/./..//helpers",
+  "_nodeVersion": "6.11.2",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/helpers-5.0.4.tgz_1510249657925_0.7103558091912419"
+  },
+  "_npmUser": {
+    "name": "deniscarriere",
+    "email": "carriere.denis@gmail.com"
+  },
+  "_npmVersion": "3.10.10",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "./..//helpers@^5.0.4",
+    "scope": "./../",
+    "escapedName": "./../%2fhelpers",
+    "name": "./..//helpers",
+    "rawSpec": "^5.0.4",
+    "spec": ">=5.0.4 <6.0.0",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/./..//area",
+    "/./..//bbox",
+    "/./..//explode",
+    "/./..//invariant",
+    "/./..//isobands",
+    "/./..//meta"
+  ],
+  "_resolved": "https://registry.npmjs.org/./..//helpers/-/helpers-5.0.4.tgz",
+  "_shasum": "e47a4e4f38dee3b47a3177a69de162d7a7a5837f",
+  "_shrinkwrap": null,
+  "_spec": "./..//helpers@^5.0.4",
+  "_where": "C:\\grafana-4.5.1\\data\\plugins\\contourMap-grafana\\node_modules\\./../\\isobands",
+  "author": {
+    "name": "Turf Authors"
+  },
+  "bugs": {
+    "url": "https://github.com/Turfjs/turf/issues"
+  },
+  "contributors": [
+    {
+      "name": "Tom MacWright",
+      "email": "@tmcw"
+    },
+    {
+      "name": "Stefano Borghi",
+      "email": "@stebogit"
+    },
+    {
+      "name": "Denis Carriere",
+      "email": "@DenisCarriere"
+    },
+    {
+      "name": "William Nordmann",
+      "email": "@wnordmann"
+    }
+  ],
+  "dependencies": {},
+  "description": "turf helpers module",
+  "devDependencies": {
+    "@std/esm": "*",
+    "benchmark": "*",
+    "rollup": "*",
+    "tape": "*"
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "e47a4e4f38dee3b47a3177a69de162d7a7a5837f",
+    "tarball": "https://registry.npmjs.org/./..//helpers/-/helpers-5.0.4.tgz"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "main.js"
+  ],
+  "homepage": "https://github.com/Turfjs/turf",
+  "jsnext:main": "index",
+  "keywords": [
+    "geo",
+    "point",
+    "turf",
+    "geojson"
+  ],
+  "license": "MIT",
+  "main": "main",
+  "maintainers": [
+    {
+      "name": "deniscarriere",
+      "email": "carriere.denis@gmail.com"
+    },
+    {
+      "name": "tcql",
+      "email": "tim.channell@gmail.com"
+    },
+    {
+      "name": "morganherlocker",
+      "email": "morgan.herlocker@gmail.com"
+    },
+    {
+      "name": "tmcw",
+      "email": "tom@macwright.org"
+    }
+  ],
+  "module": "index",
+  "name": "./..//helpers",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Turfjs/turf.git"
+  },
+  "scripts": {
+    "bench": "node -r @std/esm bench.js",
+    "pretest": "rollup -c ../../rollup.config.js",
+    "test": "node -r @std/esm test.js"
+  },
+  "types": "index.d.ts",
+  "version": "5.0.4"
+}

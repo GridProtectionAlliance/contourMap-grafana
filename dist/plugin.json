@@ -27,6 +27,7 @@
   "dependencies": {
     "grafanaVersion": "4.6",
     "openHistorianPhasorDatasource": "1.0.1",
+    "@turf/isobands": "1.0.0",
     "plugins": []
   }
 }
