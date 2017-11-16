@@ -219,6 +219,11 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     plotContour(data) {
         var ctrl = this;
 
+        if (ctrl.contourLayers != null) ctrl.contourLayers.removeFrom(ctrl.$scope.mapContainer);
+
+        if (data.length < 2) return;
+
+
         var m = $(this.$scope.mapContainer._container).height(),
             n = $(this.$scope.mapContainer._container).width(),
             values = new Array(parseInt((n * m).toFixed(0)));
@@ -226,7 +231,6 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         var geoJson = this.createGeoJson(data);
         var isoband = isobands(geoJson, geoJson.properties.breaks, geoJson.properties);
 
-        if (ctrl.contourLayers != null) ctrl.contourLayers.removeFrom(ctrl.$scope.mapContainer);
 
         ctrl.contourLayers = L.geoJSON(isoband, {
             style: function (feature) {
@@ -395,7 +399,10 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
                 var wzSum = 0;
                 var wSum = 0;
                 _.each(data, (element, index, list) => {
-                    wzSum += Math.abs( element.datapoints[element.datapoints.length - 1][0]) / Math.pow(ctrl.getDistanceFromLatLonInKm(element.latitude, element.longitude, j, i),pow);
+                    var val = element.datapoints[element.datapoints.length - 1][0];
+                    if (isNaN(val))
+                        return;
+                    wzSum += val / Math.pow(ctrl.getDistanceFromLatLonInKm(element.latitude, element.longitude, j, i),pow);
                     wSum += 1 / Math.pow(ctrl.getDistanceFromLatLonInKm(element.latitude, element.longitude, j, i),pow);
                 });
 
