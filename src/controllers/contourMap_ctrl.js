@@ -72,6 +72,10 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         ctrl.panel.gradientEndColor = (ctrl.panel.gradientEndColor != undefined ? ctrl.panel.gradientEndColor : 'red');
         ctrl.panel.gradientSigFigs = (ctrl.panel.gradientSigFigs != undefined ? ctrl.panel.gradientSigFigs : 2);
 
+        ctrl.panel.ySteps = (ctrl.panel.ySteps != undefined ? ctrl.panel.ySteps : 25);
+        ctrl.panel.xSteps = (ctrl.panel.xSteps != undefined ? ctrl.panel.xSteps : 35);
+        ctrl.panel.distancePower = (ctrl.panel.distancePower != undefined ? ctrl.panel.distancePower : 2);
+        ctrl.panel.overlap = (ctrl.panel.overlap != undefined ? ctrl.panel.overlap : 0);
 
         ctrl.metaData = null;
         ctrl.data = [];
@@ -87,7 +91,7 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     onInitEditMode() {
         this.addEditorTab('Options', 'public/plugins/gridprotectionalliance-contourmap-panel/partials/editor.html', 2);
         this.addEditorTab('Colors', 'public/plugins/gridprotectionalliance-contourmap-panel/partials/colors.html', 3);
-        console.log('init-edit-mode');
+        //console.log('init-edit-mode');
     }
 
     onPanelTeardown() {
@@ -95,11 +99,11 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
             this.map.off('zoomend');
             this.map.off('moveend');
         }
-        console.log('panel-teardown');
+        //console.log('panel-teardown');
     }
 
     onPanelInitialized() {
-        console.log('panel-initialized');
+        //console.log('panel-initialized');
     }
 
     onRefresh() {
@@ -107,16 +111,16 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
 
         if (ctrl.height > ctrl.row.height) ctrl.render();
 
-        console.log('refresh');
+        //console.log('refresh');
     }
 
     onResize() {
         var ctrl = this;
-        console.log('refresh');
+        //console.log('refresh');
     }
 
     onRender() {
-        console.log('render');
+        //console.log('render');
     }
 
     onDataRecieved(data) {
@@ -124,40 +128,12 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
 
         if (ctrl.$scope.mapContainer == null) ctrl.createMap();
 
-        if (ctrl.metaData == null || ctrl.panel.editMode) {
-            ctrl.metaData = [];
-            
-            ctrl.datasource.getMetaData(data.map(function(x) { return "'" + x.pointtag + "'"; }).join(',')).then(function (metaData) {
-                ctrl.metaData = JSON.parse(metaData.data);
-                _.each(ctrl.metaData, function (element, index, list) {
-                    var datam = _.find(data, function (y) {
-                        return element.PointTag == y.pointtag
-                    });
-
-                    if (datam.datapoints.length > 0)
-                        element.Value = datam.datapoints.pop()[0];
-                });
-                ctrl.plotSites();
-                ctrl.plotContour(data);
-
-            })
-        }
-        else {
-            _.each(ctrl.metaData, function (element, index, list) {
-                var datam = _.find(data, function(x) {
-                    return element.pointtag == data.pointtag
-                });
-
-                if (datam.datapoints.length > 0)
-                    element.Value = datam.datapoints.pop()[0];
-            });
-            ctrl.plotContour(data);
-        }
-
+        ctrl.plotSites(data);
+        ctrl.plotContour(data);
     }
 
     onDataError(msg) {
-        console.log('data-error');
+        //console.log('data-error');
     }
     // #endregion
 
@@ -212,7 +188,7 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         }
     }
 
-    plotSites() {
+    plotSites(data) {
         var ctrl = this;
         var options = {
             radius: 4,             // Radius of the circle marker, in pixels
@@ -233,9 +209,10 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
             className: null         // 	Custom class name set on an element. Only for SVG renderer.
         };
 
-        if (ctrl.circleMarkers.length > 0) ctrl.circleMarkers.map(a => { a.removeFrom(ctrl.$scope.mapContainer)})
-        _.each(ctrl.metaData, function (element, index, list) {
-            ctrl.circleMarkers.push(L.circleMarker([element.Latitude, element.Longitude], options).addTo(ctrl.$scope.mapContainer));
+        if (ctrl.circleMarkers.length > 0) ctrl.circleMarkers.map(a => { a.removeFrom(ctrl.$scope.mapContainer) })
+        ctrl.circleMarkers = [];
+        _.each(data, function (element, index, list) {
+            ctrl.circleMarkers.push(L.circleMarker([element.latitude, element.longitude], options).addTo(ctrl.$scope.mapContainer));
         });
     }
 
@@ -354,16 +331,23 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     //#region Misc
     createGeoJson(data) {
         var ctrl = this;
-        ctrl.average = this.metaData.map(a => { return a.Value }).reduce((a, b) => { return a + b }) / this.metaData.length;
-        var markerGroup = new L.featureGroup(ctrl.circleMarkers);
-        var bounds = markerGroup.getBounds();
-        var minLng = bounds._southWest.lng;
-        var minLat = bounds._southWest.lat;
-        var maxLng = bounds._northEast.lng;
-        var maxLat = bounds._northEast.lat;
 
-        var gridN = 20;
-        var gridM = 20;
+        var minLng = d3.min(data, function (a) { return a.longitude });
+        var minLat = d3.min(data, function (a) { return a.latitude  });
+        var maxLng = d3.max(data, function (a) { return a.longitude });
+        var maxLat = d3.max(data, function (a) { return a.latitude });
+
+        var overlapLat = (maxLat - minLat) * ctrl.panel.overlap/100;
+        var overlapLng = (maxLng - minLng) * ctrl.panel.overlap/100;
+
+        minLng -= overlapLng;
+        maxLng += overlapLng;
+        minLat -= overlapLat;
+        maxLat += overlapLat;
+
+        var gridN = ctrl.panel.xSteps;
+        var gridM = ctrl.panel.ySteps;
+        var pow = ctrl.panel.distancePower;
 
         var nStep = Math.abs(maxLng - minLng) / gridN;
         var mStep = Math.abs(maxLat - minLat) / gridM;
@@ -410,9 +394,9 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
 
                 var wzSum = 0;
                 var wSum = 0;
-                _.each(ctrl.metaData, (element, index, list) => {
-                    wzSum += Math.abs( element.Value) / Math.pow(ctrl.getDistanceFromLatLonInKm(element.Latitude, element.Longitude, j, i),2);
-                    wSum += 1 / Math.pow(ctrl.getDistanceFromLatLonInKm(element.Latitude, element.Longitude, j, i), 2);
+                _.each(data, (element, index, list) => {
+                    wzSum += Math.abs( element.datapoints[element.datapoints.length - 1][0]) / Math.pow(ctrl.getDistanceFromLatLonInKm(element.latitude, element.longitude, j, i),pow);
+                    wSum += 1 / Math.pow(ctrl.getDistanceFromLatLonInKm(element.latitude, element.longitude, j, i),pow);
                 });
 
                 var value = wzSum/wSum;

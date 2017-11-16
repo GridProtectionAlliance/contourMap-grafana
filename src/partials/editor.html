@@ -49,5 +49,42 @@
         </div>
     </div>
 
+    <div class="section gf-form-group">
+        <div class="gf-form">
+            <h5 class="section-heading">Contour Options</h5>
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label width-10">Y Steps</label>
+            <input class="input-small gf-form-input" type="number" ng-model="ctrl.panel.ySteps" />
+            <info-popover mode="right-absolute">
+                This option controls the number of points generated in the calculated matrix in the y direction.  
+                Insert an integer number.
+            </info-popover>
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label width-10">X Steps</label>
+            <input class="input-small gf-form-input"  type="number" ng-model="ctrl.panel.xSteps" />
+            <info-popover mode="right-absolute">
+                This option controls the number of points generated in the calculated matrix in the x direction.
+                Insert an integer number.
+            </info-popover>
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label width-10">Distance Power</label>
+            <input class="input-small gf-form-input"  type="number" ng-model="ctrl.panel.distancePower" />
+            <info-popover mode="right-absolute">
+                This option controls the power in the weigthed distance calculation, the larger the number 
+                the less each value effects the next. Insert an integer number.
+            </info-popover>
+        </div>
+        <div class="gf-form">
+            <label class="gf-form-label width-10">Overlap</label>
+            <input class="input-small gf-form-input"  type="number" ng-model="ctrl.panel.overlap" />
+            <info-popover mode="right-absolute">
+                This option controls the how much the contour overlaps the sites in percent, i.e. entering 20 equates to 20%. 
+            </info-popover>
+        </div>
+
+        </div>
 
 </div>
