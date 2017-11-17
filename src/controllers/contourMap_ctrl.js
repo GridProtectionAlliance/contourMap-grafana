@@ -25,6 +25,7 @@ import { MetricsPanelCtrl } from 'app/plugins/sdk'
 
 import _ from 'lodash';
 import d3 from "d3";
+import moment from "moment";
 
 import * as L from 'leaflet';
 import './../css/leaflet.css!';
@@ -64,6 +65,8 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         ctrl.panel.useAngleMean = (ctrl.panel.useAngleMean != undefined ? ctrl.panel.useAngleMean : false);
         ctrl.panel.angleMeanTimeWindow = (ctrl.panel.angleMeanTimeWindow != undefined ? ctrl.panel.angleMeanTimeWindow : '5');
         ctrl.panel.showLegend = (ctrl.panel.showLegend != undefined ? ctrl.panel.showLegend : false);
+        ctrl.panel.showWeather = (ctrl.panel.showWeather != undefined ? ctrl.panel.showWeather : false);
+
         ctrl.panel.useGradient = (ctrl.panel.useGradient != undefined ? ctrl.panel.useGradient : true);
         ctrl.panel.gradientBreakCount = (ctrl.panel.gradientBreakCount != undefined ? ctrl.panel.gradientBreakCount : 10);
         ctrl.panel.gradientStart = (ctrl.panel.gradientStart != undefined ? ctrl.panel.gradientStart : 0);
@@ -77,7 +80,6 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         ctrl.panel.distancePower = (ctrl.panel.distancePower != undefined ? ctrl.panel.distancePower : 2);
         ctrl.panel.overlap = (ctrl.panel.overlap != undefined ? ctrl.panel.overlap : 0);
 
-        ctrl.metaData = null;
         ctrl.data = [];
         ctrl.circleMarkers = [];
         ctrl.contourLayers = null;
@@ -237,6 +239,15 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
                 return feature.properties.style
             }
         }).addTo(ctrl.$scope.mapContainer);
+
+        var date = (data[0].datapoints.length > 0 ? moment(data[0].datapoints[data[0].datapoints.length - 1][1]) : moment());
+        var remainder = date.minute() % 5;
+        date = moment(date).add("minutes", -remainder).utc().format("YYYY-MM-DDTHH:mm");
+
+        if (ctrl.ia_wms != null) ctrl.ia_wms.remove();
+
+        if(ctrl.panel.showWeather)
+            ctrl.ia_wms = L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?", { layers: "nexrad-n0r-wmst", transparent: true, format: 'image/png', time: date}).addTo(ctrl.$scope.mapContainer);
 
         ctrl.addLegend(isoband);
 

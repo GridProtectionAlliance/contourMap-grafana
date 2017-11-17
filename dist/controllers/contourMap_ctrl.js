@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/plugins/sdk', 'lodash', 'd3', 'leaflet', './../css/leaflet.css!', './../js/constants', '@turf/isobands'], function (_export, _context) {
+System.register(['app/plugins/sdk', 'lodash', 'd3', 'moment', 'leaflet', './../css/leaflet.css!', './../js/constants', '@turf/isobands'], function (_export, _context) {
     "use strict";
 
-    var MetricsPanelCtrl, _, d3, L, TileServers, isobands, _createClass, ContourMapCtrl;
+    var MetricsPanelCtrl, _, d3, moment, L, TileServers, isobands, _createClass, ContourMapCtrl;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -42,6 +42,8 @@ System.register(['app/plugins/sdk', 'lodash', 'd3', 'leaflet', './../css/leaflet
             _ = _lodash.default;
         }, function (_d) {
             d3 = _d.default;
+        }, function (_moment) {
+            moment = _moment.default;
         }, function (_leaflet) {
             L = _leaflet;
         }, function (_cssLeafletCss) {}, function (_jsConstants) {
@@ -103,6 +105,8 @@ System.register(['app/plugins/sdk', 'lodash', 'd3', 'leaflet', './../css/leaflet
                     ctrl.panel.useAngleMean = ctrl.panel.useAngleMean != undefined ? ctrl.panel.useAngleMean : false;
                     ctrl.panel.angleMeanTimeWindow = ctrl.panel.angleMeanTimeWindow != undefined ? ctrl.panel.angleMeanTimeWindow : '5';
                     ctrl.panel.showLegend = ctrl.panel.showLegend != undefined ? ctrl.panel.showLegend : false;
+                    ctrl.panel.showWeather = ctrl.panel.showWeather != undefined ? ctrl.panel.showWeather : false;
+
                     ctrl.panel.useGradient = ctrl.panel.useGradient != undefined ? ctrl.panel.useGradient : true;
                     ctrl.panel.gradientBreakCount = ctrl.panel.gradientBreakCount != undefined ? ctrl.panel.gradientBreakCount : 10;
                     ctrl.panel.gradientStart = ctrl.panel.gradientStart != undefined ? ctrl.panel.gradientStart : 0;
@@ -116,7 +120,6 @@ System.register(['app/plugins/sdk', 'lodash', 'd3', 'leaflet', './../css/leaflet
                     ctrl.panel.distancePower = ctrl.panel.distancePower != undefined ? ctrl.panel.distancePower : 2;
                     ctrl.panel.overlap = ctrl.panel.overlap != undefined ? ctrl.panel.overlap : 0;
 
-                    ctrl.metaData = null;
                     ctrl.data = [];
                     ctrl.circleMarkers = [];
                     ctrl.contourLayers = null;
@@ -291,6 +294,14 @@ System.register(['app/plugins/sdk', 'lodash', 'd3', 'leaflet', './../css/leaflet
                                 return feature.properties.style;
                             }
                         }).addTo(ctrl.$scope.mapContainer);
+
+                        var date = data[0].datapoints.length > 0 ? moment(data[0].datapoints[data[0].datapoints.length - 1][1]) : moment();
+                        var remainder = date.minute() % 5;
+                        date = moment(date).add("minutes", -remainder).utc().format("YYYY-MM-DDTHH:mm");
+
+                        if (ctrl.ia_wms != null) ctrl.ia_wms.remove();
+
+                        if (ctrl.panel.showWeather) ctrl.ia_wms = L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?", { layers: "nexrad-n0r-wmst", transparent: true, format: 'image/png', time: date }).addTo(ctrl.$scope.mapContainer);
 
                         ctrl.addLegend(isoband);
                     }

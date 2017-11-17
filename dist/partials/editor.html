@@ -25,6 +25,13 @@
                 <select class="input-small gf-form-input" ng-model="ctrl.panel.lockMap" ng-options="n for n in ['No', 'Yes']" ng-change="ctrl.lockMap()"></select>
             </div>
         </div>
+        <div class="gf-form">
+            <gf-form-switch class="gf-form" label-class="width-12" switch-class="max-width-6" label="Include Weather" checked="ctrl.panel.showWeather"></gf-form-switch>
+            <info-popover mode="right-absolute">
+                Weather information is only available in 5 minute increments.  Weather information is not available for all places.  Please consult http://http://mesonet.agron.iastate.edu/docs/nexrad_composites/ for more information.
+            </info-popover>
+        </div>
+
     </div>
 
     <div class="section gf-form-group">
