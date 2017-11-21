@@ -25,9 +25,24 @@
         margin-right: 8px;
         opacity: 0.7;
     }
+    .mapcontainer {
+        z-index:5;
+    }
+    div.tooltip {
+        position: absolute;
+        text-align: center;
+        width: 200px;
+        height: 35px;
+        padding: 2px;
+        font: 12px sans-serif;
+        background: #17427b;
+        border: 0px;
+        border-radius: 4px;
+        pointer-events: none;
+    }
 </style>
-
-<div id="mapid_{{ctrl.panel.id}}" class="mapcontainer" ng-style="{height: ctrl.height}"></div>
+<div id="tooltip_{{ctrl.panel.id}}" class="tooltip" style="opacity: 0"></div>
+<div id="mapid_{{ctrl.panel.id}}" class="mapcontainer" ng-style="{height: ctrl.panel.height}"></div>
 <div id="maplegend_{{ctrl.panel.id}}" class="graph-legend-wrapper" ng-if="false">
     <table style="width:100%">
         <tr>

@@ -30,7 +30,7 @@ import moment from "moment";
 import * as L from 'leaflet';
 import './../css/leaflet.css!';
 
-import { TileServers } from './../js/constants';
+import { TileServers, StatesData } from './../js/constants';
 import isobands from "@turf/isobands"
 
 export class ContourMapCtrl extends MetricsPanelCtrl {
@@ -85,6 +85,7 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         ctrl.contourLayers = null;
         ctrl.$scope.mapContainer == null;
         ctrl.legend = null;
+        ctrl.stateSvg = null;
 
 
     }
@@ -122,21 +123,27 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
     }
 
     onRender() {
-        //console.log('render');
+        console.log('render');
+
     }
 
     onDataRecieved(data) {
         var ctrl = this;
 
         if (ctrl.$scope.mapContainer == null) ctrl.createMap();
-
-        ctrl.plotSites(data);
-        ctrl.plotContour(data);
+        ctrl.plotContourWithD3(data);
     }
 
     onDataError(msg) {
         //console.log('data-error');
     }
+
+    // ran on dom creation
+    link(scope, elem, attr, ctrl) {
+        ctrl.$panelContainer = elem.find('.panel-container');
+        ctrl.panel.height = ctrl.height;
+        
+    } 
     // #endregion
 
     // #region Map and Marker Creation
@@ -190,9 +197,8 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         }
     }
 
-    plotSites(data) {
-        var ctrl = this;
-        var options = {
+    plotContour(data) {
+        var geojsonMarkerOptions = {
             radius: 4,             // Radius of the circle marker, in pixels
             stroke: true,           // Whether to draw stroke along the path. Set it to false to disable borders on polygons or circles.
             color: '#3388ff',       // Stroke color
@@ -211,52 +217,169 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
             className: null         // 	Custom class name set on an element. Only for SVG renderer.
         };
 
-        if (ctrl.circleMarkers.length > 0) ctrl.circleMarkers.map(a => { a.removeFrom(ctrl.$scope.mapContainer) })
-        ctrl.circleMarkers = [];
-        _.each(data, function (element, index, list) {
-            ctrl.circleMarkers.push(L.circleMarker([element.latitude, element.longitude], options).addTo(ctrl.$scope.mapContainer));
-        });
-    }
-
-    plotContour(data) {
         var ctrl = this;
 
         if (ctrl.contourLayers != null) ctrl.contourLayers.removeFrom(ctrl.$scope.mapContainer);
 
         if (data.length < 2) return;
 
-
-        var m = $(this.$scope.mapContainer._container).height(),
-            n = $(this.$scope.mapContainer._container).width(),
-            values = new Array(parseInt((n * m).toFixed(0)));
-
         var geoJson = this.createGeoJson(data);
         var isoband = isobands(geoJson, geoJson.properties.breaks, geoJson.properties);
 
+        ctrl.addLegend(isoband);
+
+        _.each(data, (e, i, l) => {
+            var geojsonFeature = {
+                "type": "Feature",
+                "properties": {
+                    "name": e.rootTarget,
+                    "popupContent": e.rootTarget + '-' + (e.datapoints.length > 0 ? e.datapoints[e.datapoints.length - 1][0] : "No Data")
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [e.longitude, e.latitude]
+                }
+            };
+
+            isoband.features.push(geojsonFeature);
+        });
 
         ctrl.contourLayers = L.geoJSON(isoband, {
             style: function (feature) {
                 return feature.properties.style
+            },
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, geojsonMarkerOptions);
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.popupContent) {
+                    layer.bindPopup(feature.properties.popupContent);
+                }
             }
         }).addTo(ctrl.$scope.mapContainer);
 
+
         var date = (data[0].datapoints.length > 0 ? moment(data[0].datapoints[data[0].datapoints.length - 1][1]) : moment());
         var remainder = date.minute() % 5;
-        date = moment(date).add("minutes", -remainder).utc().format("YYYY-MM-DDTHH:mm");
+        date = moment(date).add(-remainder, "minutes").utc().format("YYYY-MM-DDTHH:mm");
 
         if (ctrl.ia_wms != null) ctrl.ia_wms.remove();
 
         if(ctrl.panel.showWeather)
             ctrl.ia_wms = L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?", { layers: "nexrad-n0r-wmst", transparent: true, format: 'image/png', time: date}).addTo(ctrl.$scope.mapContainer);
 
-        ctrl.addLegend(isoband);
+    }
 
+    plotContourWithD3(data) {
+        var ctrl = this;
+        var geoJson = this.createGeoJson(data);
+        var isoband = isobands(geoJson, geoJson.properties.breaks, geoJson.properties);
+        var stateData = d3.geoPath()(StatesData.features[4].geometry)
+        // Define the div for the tooltip
+        var div = d3.select("#tooltip_" + ctrl.panel.id);
+
+        if (!d3.select('#mapid_' + ctrl.panel.id + ' .leaflet-overlay-pane svg').empty()) d3.select('#mapid_' + ctrl.panel.id + ' .leaflet-overlay-pane svg').remove();
+        var svg = d3.select(ctrl.$scope.mapContainer.getPanes().overlayPane).append("svg"),
+            g = svg.append("g").attr("class", "leaflet-zoom-hide").attr("clip-path","url(#mask)"),
+            transform = d3.geoTransform({ point: projectPoint }),
+            path = d3.geoPath().projection(transform),
+            clipPath = svg.append('defs').append('clipPath').attr('id', 'mask'),
+            fakemask = g.append("path").style('stroke','black').style('fill-opacity', '0'),
+            mask = clipPath.append("path");
+
+
+        // create isobands
+        var feature = g.selectAll("path")
+            .data(isoband.features)
+            .enter()
+            .append("path")
+            .style("fill", function (d) { return d.properties.style.fillColor })
+            .style("opacity", function (d) { return 0.5 });
+
+        // create markers
+        var circles = g.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d) { return ctrl.$scope.mapContainer.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude)).x })
+            .attr("cy", function (d) { return ctrl.$scope.mapContainer.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude)).y })
+            .attr("r", "4px")
+            .attr("fill", "#3388ff")
+            .attr("opacity", "1.0")
+            .attr("fill-opacity", "0.2")
+            .attr("fill-rule", "evenodd")
+            .attr("weight", "1")
+            .attr("stroke", true)
+            .attr("cursor", "pointer")
+            .on("mouseover", function (d) {
+                div.transition()
+                    .duration(200)
+                    .style("opacity", 1);
+                div.html(d.rootTarget + "<br/>" + (d.datapoints.length > 0 ? d.datapoints[d.datapoints.length - 1][0].toFixed(4) : "No Data"))
+                    .style("left", (event.pageX) + "px")
+                    .style("top", (event.pageY - 100) + "px");
+            })
+            .on("mouseout", function (d) {
+                div.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+
+
+        var geojsonMarkerOptions = {
+            radius: 4,             // Radius of the circle marker, in pixels
+            stroke: true,           // Whether to draw stroke along the path. Set it to false to disable borders on polygons or circles.
+            color: '#3388ff',       // Stroke color
+            weight: 1,              // Stroke width in pixels
+            opacity: 1.0,           // Stroke opacity
+            lineCap: 'round',       // A string that defines shape to be used at the end of the stroke.
+            lineJoin: 'round',      // A string that defines shape to be used at the corners of the stroke.
+            dashArray: null,        // A string that defines the stroke dash pattern. Doesn't work on Canvas-powered layers in some old browsers.
+            dashOffset: null,       // A string that defines the distance into the dash pattern to start the dash. Doesn't work on Canvas-powered layers in some old browsers.
+            fill: true,             // Whether to fill the path with color. Set it to false to disable filling on polygons or circles.
+            fillColor: '#3388ff',   // Fill color. Defaults to the value of the color option
+            fillOpacity: 0.2,       // Fill opacity.
+            fillRule: 'evenodd',    // A string that defines how the inside of a shape is determined.
+            bubblingMouseEvents: true,  // When true, a mouse event on this path will trigger the same event on the map (unless L.DomEvent.stopPropagation is used).
+            renderer: null,         // Use this specific instance of Renderer for this path. Takes precedence over the map's default renderer.
+            className: null         // 	Custom class name set on an element. Only for SVG renderer.
+        };
+
+        ctrl.$scope.mapContainer.on("viewreset", reset);
+        reset();
+
+        // Reposition the SVG to cover the features.
+        function reset() {
+            var bounds = path.bounds(isoband),
+                topLeft = bounds[0],
+                bottomRight = bounds[1];
+
+            svg.attr("width", bottomRight[0] - topLeft[0])
+                .attr("height", bottomRight[1] - topLeft[1])
+                .style("left", topLeft[0] + "px")
+                .style("top", topLeft[1] + "px");
+
+            feature.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+            feature.attr("d", path);
+            circles.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+            mask.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+            fakemask.attr("d", path(StatesData.features[4]));
+            mask.attr("d", path(StatesData.features[4]));
+
+        }
+
+
+        function projectPoint(x, y) {
+            var point = ctrl.$scope.mapContainer.latLngToLayerPoint(new L.LatLng(y, x));
+            this.stream.point(point.x, point.y);
+        }
     }
 
     addLegend(data) {
         var ctrl = this;
 
-        if (ctrl.legend != null) ctrl.legend.remove();
+        if (ctrl.legend != null)
+            ctrl.legend.remove();
 
         if (ctrl.panel.showLegend) {
             ctrl.legend = L.control({ position: 'bottomright' });
@@ -457,7 +580,11 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
         return deg * (Math.PI / 180)
     }
 
-
+    project(x) {
+        var ctrl = this;
+        var point = ctrl.$scope.mapContainer.latLngToLayerPoint(new L.LatLng(x[1], x[0]));
+        return [point.x, point.y];
+    }
     //#endregion
 
 }
