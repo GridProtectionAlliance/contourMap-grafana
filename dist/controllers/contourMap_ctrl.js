@@ -337,6 +337,8 @@ System.register(['app/plugins/sdk', 'lodash', 'd3', 'moment', 'leaflet', './../c
                             fakemask = g.append("path").style('stroke', 'black').style('fill-opacity', '0'),
                             mask = clipPath.append("path");
 
+                        ctrl.addLegend(isoband);
+
                         // create isobands
                         var feature = g.selectAll("path").data(isoband.features).enter().append("path").style("fill", function (d) {
                             return d.properties.style.fillColor;
@@ -377,6 +379,14 @@ System.register(['app/plugins/sdk', 'lodash', 'd3', 'moment', 'leaflet', './../c
 
                         ctrl.$scope.mapContainer.on("viewreset", reset);
                         reset();
+
+                        var date = data[0].datapoints.length > 0 ? moment(data[0].datapoints[data[0].datapoints.length - 1][1]) : moment();
+                        var remainder = date.minute() % 5;
+                        date = moment(date).add(-remainder, "minutes").utc().format("YYYY-MM-DDTHH:mm");
+
+                        if (ctrl.ia_wms != null) ctrl.ia_wms.remove();
+
+                        if (ctrl.panel.showWeather) ctrl.ia_wms = L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?", { layers: "nexrad-n0r-wmst", transparent: true, format: 'image/png', time: date }).addTo(ctrl.$scope.mapContainer);
 
                         // Reposition the SVG to cover the features.
                         function reset() {
