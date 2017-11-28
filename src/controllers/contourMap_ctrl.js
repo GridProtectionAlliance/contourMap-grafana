@@ -129,6 +129,7 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
 
     onDataRecieved(data) {
         var ctrl = this;
+        ctrl.data = data;
 
         if (ctrl.$scope.mapContainer == null) ctrl.createMap();
         ctrl.plotContourWithD3(data);
@@ -178,8 +179,8 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
                 ctrl.panel.maxLatitude = bounds._northEast.lat;
                 ctrl.panel.minLatitude = bounds._southWest.lat;
                 ctrl.panel.minLongitude = bounds._northEast.lng;
-
-                ctrl.refresh();
+                //ctrl.refresh();
+                ctrl.plotContourWithD3(ctrl.data)
             });
             ctrl.$scope.mapContainer.off('moveend');
             ctrl.$scope.mapContainer.on('moveend', function (event) {
@@ -190,9 +191,10 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
                 ctrl.panel.maxLatitude = bounds._northEast.lat;
                 ctrl.panel.minLatitude = bounds._southWest.lat;
                 ctrl.panel.minLongitude = bounds._northEast.lng;
-
-                ctrl.refresh();
+                //ctrl.refresh();
+                ctrl.plotContourWithD3(ctrl.data)
             });
+            ctrl.$scope.mapContainer.on("viewreset", ctrl.plotContourWithD3(ctrl.data));
 
         }
     }
@@ -347,8 +349,21 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
             className: null         // 	Custom class name set on an element. Only for SVG renderer.
         };
 
-        ctrl.$scope.mapContainer.on("viewreset", reset);
-        reset();
+        var bounds = path.bounds(isoband),
+            topLeft = bounds[0],
+            bottomRight = bounds[1];
+
+        svg.attr("width", bottomRight[0] - topLeft[0])
+            .attr("height", bottomRight[1] - topLeft[1])
+            .style("left", topLeft[0] + "px")
+            .style("top", topLeft[1] + "px");
+
+        feature.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+        feature.attr("d", path);
+        circles.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+        mask.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+        mask.attr("d", path(StatesData.features[4]));
+
 
         var date = (data[0].datapoints.length > 0 ? moment(data[0].datapoints[data[0].datapoints.length - 1][1]) : moment());
         var remainder = date.minute() % 5;
@@ -361,21 +376,6 @@ export class ContourMapCtrl extends MetricsPanelCtrl {
 
         // Reposition the SVG to cover the features.
         function reset() {
-            var bounds = path.bounds(isoband),
-                topLeft = bounds[0],
-                bottomRight = bounds[1];
-
-            svg.attr("width", bottomRight[0] - topLeft[0])
-                .attr("height", bottomRight[1] - topLeft[1])
-                .style("left", topLeft[0] + "px")
-                .style("top", topLeft[1] + "px");
-
-            feature.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
-            feature.attr("d", path);
-            circles.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
-            mask.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
-            fakemask.attr("d", path(StatesData.features[4]));
-            mask.attr("d", path(StatesData.features[4]));
 
         }
 
